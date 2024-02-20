@@ -1,28 +1,29 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import subprocess
 import os
 import json
 import time
+import requests  # Import the requests library
 
 app = Flask(__name__)
 
-# Define a route to trigger the Scrapy crawl
-@app.route('/api/crawl', methods=['GET'])
+# Define a route to trigger the Scrapy crawl with a list of URLs
+@app.route('/api/crawl', methods=['POST'])
 def trigger_crawl():
-    # Run the Scrapy crawl command and capture the output
-    result = run_scrapy_crawl()
-    return result
+    # Get the list of URLs from the request JSON
+    request_data = request.get_json()
+    urls = request_data.get('urls', [])
 
-    # Check if the crawl returned a 200 status code
-    if result.get('status') == 200:
-        time.sleep(2)
-        # Read the contents of the output.json file
-        output_json = read_output_json()
-        return jsonify({'message': 'Crawl completed successfully!', 'output': output_json}), 200
-    else:
-        return jsonify({'message': 'Crawl failed or returned a non-200 status code.', 'output': result}), 500
+    # Check if the 'urls' key is present in the JSON
+    if not urls:
+        return jsonify({'error': 'No URLs provided in the request.'}), 400
 
-def run_scrapy_crawl():
+    # Make requests for each URL using Scrapy and collect the results
+    results = run_scrapy_crawl(urls)
+
+    return jsonify({'status': 200, 'message': 'Requests completed successfully!','results': results}), 200
+
+def run_scrapy_crawl(urls):
     # Replace 'myproject' with your actual Scrapy project name
     project_name = 'tutorial'
     
@@ -34,24 +35,29 @@ def run_scrapy_crawl():
     print(f"Navigating to {project_folder}")
     os.chdir(project_folder)
 
-    # Run the Scrapy crawl command using subprocess
-    cmd = f"scrapy crawl {spider_name}"
-    print(f"Running command: {cmd}")
+    # Prepare the results list
+    results = []
 
-    try:
-        # Capture the output of the command
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
+    for url in urls:
+        # Run the Scrapy crawl command for each URL
+        cmd = f"scrapy crawl {spider_name} -a url={url}"
+        print(f"Running command: {cmd}")
 
-        # Check if the output is not empty
-        if read_output_json():
-            # Parse the JSON result
-            print(read_output_json())
-            return read_output_json()
-        else:
-            return {'status': 500, 'error': 'Empty output from Scrapy crawl.'}
-    except subprocess.CalledProcessError as e:
-        print(f"Error: {e}")
-        return {'status': 500, 'error': f"Error: {e}"}
+        try:
+            # Capture the output of the command
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
+
+            # Check if the output is not empty
+            if read_output_json():
+                # Parse the JSON result
+                output_data = read_output_json()
+                results.append({'url': url, 'data': output_data})
+            else:
+                results.append({'url': url, 'error': 'Empty output from Scrapy crawl.'})
+        except subprocess.CalledProcessError as e:
+            results.append({'url': url, 'error': f"Error: {e}"})
+
+    return results
 
 def read_output_json():
     
