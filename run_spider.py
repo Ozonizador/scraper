@@ -11,7 +11,7 @@ app = Flask(__name__)
 def trigger_crawl():
     # Run the Scrapy crawl command and capture the output
     result = run_scrapy_crawl()
-    return jsonify(result)
+    return result
 
     # Check if the crawl returned a 200 status code
     if result.get('status') == 200:
@@ -41,13 +41,12 @@ def run_scrapy_crawl():
     try:
         # Capture the output of the command
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
-        print(result, 'result.stdout')
 
         # Check if the output is not empty
-        if result.stdout.strip():
+        if read_output_json():
             # Parse the JSON result
-            result_json = json.loads(result.stdout)
-            return result_json
+            print(read_output_json())
+            return read_output_json()
         else:
             return {'status': 500, 'error': 'Empty output from Scrapy crawl.'}
     except subprocess.CalledProcessError as e:
@@ -55,8 +54,6 @@ def run_scrapy_crawl():
         return {'status': 500, 'error': f"Error: {e}"}
 
 def read_output_json():
-    # Replace 'myproject' with your actual Scrapy project name
-    project_name = 'tutorial'
     
     # Define the path to the output.json file
     output_file_path = os.path.join(os.getcwd(), 'output.json')
