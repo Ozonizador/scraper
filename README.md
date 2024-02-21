@@ -1,4 +1,4 @@
-#Price Scraper API
+# Price Scraper API
 
 ## Getting started
 
