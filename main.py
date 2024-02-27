@@ -1,13 +1,22 @@
 import json
 import os
-import subprocess
-from typing import Union
+import asyncio
+from typing import List, Union
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from fastapi.requests import Request
+from twisted.internet import reactor
 from scrapy.crawler import CrawlerProcess
-from tutorial.tutorial.spiders.__init__ import WortenSpider
+import uvicorn
+from tutorial.tutorial.spiders.__init__ import LeroySpider, WortenSpider
+from scrapy.utils.project import get_project_settings
+settings = get_project_settings()
+
+from pydantic import BaseModel
+
+class CrawlRequest(BaseModel):
+    urls: List[str]
+
 
 
 app = FastAPI()
@@ -17,16 +26,12 @@ app = FastAPI()
 def read_root():
     return {"Hello": "World"}
 
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
-
 @app.post("/products/")
-def trigger_crawl(request: Request):
+def trigger_crawl(request: CrawlRequest):
     # Get the list of URLs from the request JSON
-    request_data = request.json()
-    urls = request_data.get('urls', [])
+    import pdb; pdb.set_trace()
+
+    urls = request.urls
 
     # Check if the 'urls' key is present in the JSON
     if not urls:
@@ -41,14 +46,23 @@ def trigger_crawl(request: Request):
 def run_scrapy_crawl(urls):
     results = []
 
+    # Create a Scrapy process
+    process = CrawlerProcess(get_project_settings())
+
     for url in urls:
-        process = CrawlerProcess()
-        process.crawl(WortenSpider, url=url)
+        # Run the spider for each URL
+        if 'worten' in url:
+            process.crawl(WortenSpider, url=url)
+        elif 'leroy' in url:
+            process.crawl(LeroySpider, url=url)
+        else:
+            continue
+
+        # Start the process and block until all spiders are finished
         process.start()
+        process.stop()
 
-        # Access items collected by the spider after the crawl
-        output_data = getattr(WortenSpider, 'collected_items', None)
-
+        output_data = read_output_json()
         if output_data:
             results.append({'url': url, 'data': output_data})
         else:
@@ -73,6 +87,8 @@ def read_output_json():
     else:
         return {'error': 'output.json file not found.'}
 
-if __name__ == '__main__':
-    # Run the app on localhost:5000
-    app.run(debug=True)
+if __name__ == "__main__":
+    try:
+        asyncio.run(uvicorn.run(app, host="0.0.0.0", port=8000))
+    except Exception as e:
+        print(f"An error occurred: {e}")
