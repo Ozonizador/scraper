@@ -6,7 +6,7 @@ from typing import List, Union
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from twisted.internet import reactor
-from scrapy.crawler import CrawlerProcess
+from scrapy.crawler import CrawlerProcess, CrawlerRunner
 import uvicorn
 from tutorial.tutorial.spiders.__init__ import LeroySpider, WortenSpider
 from scrapy.utils.project import get_project_settings
@@ -46,27 +46,33 @@ def trigger_crawl(request: CrawlRequest):
 def run_scrapy_crawl(urls):
     results = []
 
+    # Specify the path to your JSON file
+    json_file_path = 'output.json'
+
+    # Open the file in write mode and clear its contents by writing an empty JSON object
+    with open(json_file_path, 'w') as json_file:
+        json.dump({}, json_file)
+
     # Create a Scrapy process
     process = CrawlerProcess(get_project_settings())
-
+    
     for url in urls:
         # Run the spider for each URL
-        if 'worten' in url:
+        if 'worten.pt' in url:
             process.crawl(WortenSpider, url=url)
-        elif 'leroy' in url:
+        elif 'leroymerlin.pt' in url:
             process.crawl(LeroySpider, url=url)
         else:
             continue
 
-        # Start the process and block until all spiders are finished
-        process.start()
-        process.stop()
+    # Start the process and block until all spiders are finished
+    process.start()
 
-        output_data = read_output_json()
-        if output_data:
-            results.append({'url': url, 'data': output_data})
-        else:
-            results.append({'url': url, 'error': 'Empty output from Scrapy crawl.'})
+    output_data = read_output_json()
+    if output_data:
+        results.append({'data': output_data})
+    else:
+        results.append({'url': url, 'error': 'Empty output from Scrapy crawl.'})
 
     return results
 
