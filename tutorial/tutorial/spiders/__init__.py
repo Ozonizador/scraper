@@ -1,6 +1,9 @@
 import scrapy
 from scrapy_splash import SplashRequest
 import json
+import requests
+import os
+from dotenv import load_dotenv
 
 class WortenSpider(scrapy.Spider):
     name = 'worten_spider'
@@ -53,14 +56,13 @@ class LeroySpider(scrapy.Spider):
         super(LeroySpider, self).__init__(*args, **kwargs)
         # Get the 'url' argument from the command line, or set a default URL
         self.start_url = kwargs.get('url', '')
-
+        
     def start_requests(self):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'}
         yield SplashRequest(self.start_url, self.parse, endpoint='render.html', args={'wait': 3}, headers=headers)
 
     def parse(self, response):
-        if response.status_code == 200:
             # Extract data from the rendered HTML
             product_name = response.css('h1.l-product-detail-presentation__title::text').get()
             price = response.css('div.kl-price .js-main-price::text').get()
@@ -71,9 +73,8 @@ class LeroySpider(scrapy.Spider):
 
             # Save the results to a fixed JSON file
             output = {'status': 200, 'data': {'competitor':'leroy','product_name': product_name, 'price': price, 'original_price': original_price, 'size': str(len(response.body))}}
-        else:
-            output = {'status': response.status_code, 'reason': response.reason}
-        self.scraped_data.append(output)
+            # output = {'status': response.status_code, 'reason': response.reason}
+            self.scraped_data.append(output)
 
     def closed(self, reason):
         self.log(f'Spider closed: {reason}')
