@@ -57,8 +57,8 @@ DOWNLOADER_MIDDLEWARES = {
 
 SMARTPROXY_USER = 'sp8npsc6y7' ## Smartproxy Username (Sub-user)
 SMARTPROXY_PASSWORD = 'Qoswo09sJ2duSk4daA' ## Password for your user
-SMARTPROXY_ENDPOINT = 'dc.smartproxy.com' ## Endpoint you'd like to use
-SMARTPROXY_PORT = '10001' ## Port of the endpoint you are using.
+SMARTPROXY_ENDPOINT = 'https://ip.smartproxy.com/json' ## Endpoint you'd like to use
+SMARTPROXY_PORT = '7000' ## Port of the endpoint you are using.
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html

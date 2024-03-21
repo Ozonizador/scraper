@@ -2,8 +2,9 @@ import scrapy
 from scrapy_splash import SplashRequest
 import json
 import requests
-import os
 from dotenv import load_dotenv
+from scrapy import signals
+from w3lib.http import basic_auth_header
 
 class WortenSpider(scrapy.Spider):
     name = 'worten_spider'
@@ -12,13 +13,17 @@ class WortenSpider(scrapy.Spider):
 
     def __init__(self, *args, **kwargs):
         super(WortenSpider, self).__init__(*args, **kwargs)
-        # Get the 'url' argument from the command line, or set a default URL
-        self.start_url = kwargs.get('url', 'https://www.worten.pt/produtos/consola-nintendo-switch-v2-6994947')
+        self.start_url = kwargs.get('url', '')
+        username = 'sp8npsc6y7'
+        password = 'Qoswo09sJ2duSk4daA'
+        proxy = f"https://{username}:{password}@dc.smartproxy.com:10000"
+        self.proxy = proxy
 
     def start_requests(self):
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
-        yield SplashRequest(self.start_url, self.parse, endpoint='render.html', args={'wait': 3}, headers=headers)
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
+            'Proxy-Authorization': basic_auth_header('sp8npsc6y7', 'Qoswo09sJ2duSk4daA')}
+        yield SplashRequest(self.start_url, self.parse, args={'wait': 5}, headers=headers)
 
     def parse(self, response):
         # Extract data from the rendered HTML
@@ -56,25 +61,32 @@ class LeroySpider(scrapy.Spider):
         super(LeroySpider, self).__init__(*args, **kwargs)
         # Get the 'url' argument from the command line, or set a default URL
         self.start_url = kwargs.get('url', '')
+        username = 'sp8npsc6y7'
+        password = 'Qoswo09sJ2duSk4daA'
+        proxy = f"https://{username}:{password}@dc.smartproxy.com:10000"
+        self.proxy = proxy
         
     def start_requests(self):
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'}
-        yield SplashRequest(self.start_url, self.parse, endpoint='render.html', args={'wait': 3}, headers=headers)
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
+            'Proxy-Authorization': basic_auth_header('sp8npsc6y7', 'Qoswo09sJ2duSk4daA')}
+        yield SplashRequest(self.start_url, self.parse, meta={'proxy': self.proxy}, args={'wait': 3}, headers=headers)
 
     def parse(self, response):
-            # Extract data from the rendered HTML
-            product_name = response.css('h1.l-product-detail-presentation__title::text').get()
-            price = response.css('div.kl-price .js-main-price::text').get()
-            original_price = response.css('div.kl-price span.km-price__from-without-offer::text').get()
+        # Extract data from the rendered HTML
+        product_name = response.css('h1.l-product-detail-presentation__title::text').get()
+        price = response.css('div.kl-price .js-main-price::text').get()
+        original_price = response.css('div.kl-price span.km-price__from-without-offer::text').get()
 
-            # Print the results to the console
-            self.log(f'Product Name: {product_name}, Price: {price}')
+        self.logger.info('test: ' + response)
 
-            # Save the results to a fixed JSON file
-            output = {'status': 200, 'data': {'competitor':'leroy','product_name': product_name, 'price': price, 'original_price': original_price, 'size': str(len(response.body))}}
-            # output = {'status': response.status_code, 'reason': response.reason}
-            self.scraped_data.append(output)
+        # Print the results to the console
+        self.log(f'Product Name: {product_name}, Price: {price}')
+
+        # Save the results to a fixed JSON file
+        output = {'status': 200, 'data': {'competitor':'leroy','product_name': product_name, 'price': price, 'original_price': original_price, 'size': str(len(response.body))}}
+        # output = {'status': response.status_code, 'reason': response.reason}
+        self.scraped_data.append(output)
 
     def closed(self, reason):
         self.log(f'Spider closed: {reason}')
@@ -102,7 +114,7 @@ class BricoDepotSpider(scrapy.Spider):
     def start_requests(self):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'}
-        yield SplashRequest(self.start_url, self.parse, endpoint='render.html', args={'wait': 3}, headers=headers)
+        yield SplashRequest(self.start_url, self.parse, args={'wait': 3}, headers=headers)
 
     def parse(self, response):
         if response.status_code == 200:
