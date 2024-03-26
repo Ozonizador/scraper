@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from twisted.internet import reactor
 from scrapy.crawler import CrawlerProcess, CrawlerRunner
 import uvicorn
-from tutorial.tutorial.spiders.__init__ import LeroySpider, WortenSpider
+from tutorial.tutorial.spiders.__init__ import IpTester, LeroySpider, WortenSpider
 from scrapy.utils.project import get_project_settings
 settings = get_project_settings()
 
@@ -62,6 +62,8 @@ def run_scrapy_crawl(urls):
             process.crawl(WortenSpider, url=url)
         elif 'leroymerlin.pt' in url:
             process.crawl(LeroySpider, url=url)
+        elif 'https://browserleaks.com/ip' in url:
+            process.crawl(IpTester, url=url)
         else:
             continue
 

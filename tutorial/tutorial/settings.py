@@ -50,15 +50,22 @@ ROBOTSTXT_OBEY = True
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-DOWNLOADER_MIDDLEWARES = {
-    'scrapy.downloadermiddlewares.httpproxy. HttpProxyMiddleware': 110,
-    'tutorial.smartproxy_auth. ProxyMiddleware': 100,
-}
+# DOWNLOADER_MIDDLEWARES = {
+#     'scrapy.downloadermiddlewares.httpproxy. HttpProxyMiddleware': 110,
+#     'tutorial.smartproxy_auth. ProxyMiddleware': 100,
+# }
 
 SMARTPROXY_USER = 'sp8npsc6y7' ## Smartproxy Username (Sub-user)
 SMARTPROXY_PASSWORD = 'Qoswo09sJ2duSk4daA' ## Password for your user
-SMARTPROXY_ENDPOINT = 'https://ip.smartproxy.com/json' ## Endpoint you'd like to use
-SMARTPROXY_PORT = '7000' ## Port of the endpoint you are using.
+# SMARTPROXY_ENDPOINT = 'https://ip.smartproxy.com/json' ## Endpoint you'd like to use
+# SMARTPROXY_PORT = '7000' ## Port of the endpoint you are using.
+
+DOWNLOADER_MIDDLEWARES = {
+    'tutorial.middlewares.SmartproxyMiddleware': 543,
+}
+
+SMARTPROXY_URL = 'http://{SMARTPROXY_USER}:{SMARTPROXY_PASSWORD}@dc.smartproxy.com:10001'
+
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -94,6 +101,5 @@ SMARTPROXY_PORT = '7000' ## Port of the endpoint you are using.
 #HTTPCACHE_STORAGE = "scrapy.extensions.httpcache.FilesystemCacheStorage"
 
 # Set settings whose default value is deprecated to a future-proof value
-REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"

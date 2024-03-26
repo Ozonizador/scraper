@@ -3,8 +3,12 @@ from scrapy_splash import SplashRequest
 import json
 import requests
 from dotenv import load_dotenv
+import os
 from scrapy import signals
 from w3lib.http import basic_auth_header
+
+# Load environment variables from .env file
+load_dotenv()
 
 class WortenSpider(scrapy.Spider):
     name = 'worten_spider'
@@ -21,9 +25,16 @@ class WortenSpider(scrapy.Spider):
 
     def start_requests(self):
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
-            'Proxy-Authorization': basic_auth_header('sp8npsc6y7', 'Qoswo09sJ2duSk4daA')}
-        yield SplashRequest(self.start_url, self.parse, args={'wait': 5}, headers=headers)
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'}
+        
+        # Access the value of SMARTPROXY_URL
+        username = os.getenv("username")
+        password = os.getenv("password")
+        yield scrapy.Request(url=self.start_url, callback=self.parse,
+                meta={'proxy': f'https://{username}:{password}@dc.smartproxy.com:10000'},
+                headers=headers,
+                args={'wait': 3}
+            )
 
     def parse(self, response):
         # Extract data from the rendered HTML
@@ -61,16 +72,19 @@ class LeroySpider(scrapy.Spider):
         super(LeroySpider, self).__init__(*args, **kwargs)
         # Get the 'url' argument from the command line, or set a default URL
         self.start_url = kwargs.get('url', '')
-        username = 'sp8npsc6y7'
-        password = 'Qoswo09sJ2duSk4daA'
-        proxy = f"https://{username}:{password}@dc.smartproxy.com:10000"
-        self.proxy = proxy
         
     def start_requests(self):
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
-            'Proxy-Authorization': basic_auth_header('sp8npsc6y7', 'Qoswo09sJ2duSk4daA')}
-        yield SplashRequest(self.start_url, self.parse, meta={'proxy': self.proxy}, args={'wait': 3}, headers=headers)
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'}
+        
+        # Access the value of SMARTPROXY_URL
+        username = os.getenv("username")
+        password = os.getenv("password")
+        yield scrapy.Request(url=self.start_url, callback=self.parse,
+                meta={'proxy': f'https://{username}:{password}@dc.smartproxy.com:10000'},
+                headers=headers,
+                args={'wait': 3}
+            )
 
     def parse(self, response):
         # Extract data from the rendered HTML
@@ -114,7 +128,16 @@ class BricoDepotSpider(scrapy.Spider):
     def start_requests(self):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'}
-        yield SplashRequest(self.start_url, self.parse, args={'wait': 3}, headers=headers)
+        
+        
+        # Access the value of SMARTPROXY_URL
+        username = os.getenv("username")
+        password = os.getenv("password")
+        yield scrapy.Request(url=self.start_url, callback=self.parse,
+                meta={'proxy': f'https://{username}:{password}@dc.smartproxy.com:10000'},
+                headers=headers,
+                args={'wait': 3}
+            )
 
     def parse(self, response):
         if response.status_code == 200:
@@ -131,6 +154,56 @@ class BricoDepotSpider(scrapy.Spider):
         else:
             output = {'status': response.status_code, 'reason': response.reason}
         self.scraped_data.append(output)
+
+    def closed(self, reason):
+        self.log(f'Spider closed: {reason}')
+
+        # Save the results to the output file
+        with open(self.output_filename, 'w') as f:
+            json.dump(self.scraped_data, f)
+
+        self.log(f'Results saved to {self.output_filename}')
+
+
+class IpTester(scrapy.Spider):
+    name = "ip_tester"
+    output_filename = 'output.json'  # Fixed filename
+    scraped_data = []
+
+    def __init__(self, *args, **kwargs):
+        with open(self.output_filename, 'r') as f:
+            self.scraped_data = json.load(f)
+
+        super(IpTester, self).__init__(*args, **kwargs)
+        # Get the 'url' argument from the command line, or
+        # set a default URL
+        self.start_url = kwargs.get('url', '')
+
+    def start_requests(self):
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'
+        }
+
+        # Access the value of SMARTPROXY_URL
+        username = os.getenv("username")
+        password = os.getenv("password")
+        yield scrapy.Request(url=self.start_url, callback=self.parse,
+                meta={'proxy': f'https://{username}:{password}@dc.smartproxy.com:10000'},
+                headers=headers,
+                args={'wait': 3}
+            )
+
+    def parse(self, response):
+        # Extract data from the rendered HTML
+        ip = response.css('#client-ipv4 span.flag-text::text').get()
+
+        # Print the results to the console
+        self.log(f'Ip: {ip}')
+
+        # Save the results to a fixed JSON file
+        output = {'status': 200, 'data': {'ip': ip}}
+
+        self.log(output)
 
     def closed(self, reason):
         self.log(f'Spider closed: {reason}')
