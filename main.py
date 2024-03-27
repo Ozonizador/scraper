@@ -51,7 +51,7 @@ def run_scrapy_crawl(urls):
 
     # Open the file in write mode and clear its contents by writing an empty JSON object
     with open(json_file_path, 'w') as json_file:
-        json.dump({}, json_file)
+        json.dump([], json_file)
 
     # Create a Scrapy process
     process = CrawlerProcess(get_project_settings())
@@ -64,6 +64,8 @@ def run_scrapy_crawl(urls):
             process.crawl(LeroySpider, url=url)
         elif 'https://browserleaks.com/ip' in url:
             process.crawl(IpTester, url=url)
+        elif 'domot' in url:
+            process.crawl(WortenSpider, url=url)
         else:
             continue
 

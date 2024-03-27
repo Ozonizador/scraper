@@ -8,6 +8,7 @@
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 BOT_NAME = "tutorial"
+DOWNLOAD_DELAY = 5
 
 SPIDER_MODULES = ["tutorial.spiders"]
 NEWSPIDER_MODULE = "tutorial.spiders"

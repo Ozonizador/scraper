@@ -18,10 +18,6 @@ class WortenSpider(scrapy.Spider):
     def __init__(self, *args, **kwargs):
         super(WortenSpider, self).__init__(*args, **kwargs)
         self.start_url = kwargs.get('url', '')
-        username = 'sp8npsc6y7'
-        password = 'Qoswo09sJ2duSk4daA'
-        proxy = f"https://{username}:{password}@dc.smartproxy.com:10000"
-        self.proxy = proxy
 
     def start_requests(self):
         headers = {
@@ -32,8 +28,7 @@ class WortenSpider(scrapy.Spider):
         password = os.getenv("password")
         yield scrapy.Request(url=self.start_url, callback=self.parse,
                 meta={'proxy': f'https://{username}:{password}@dc.smartproxy.com:10000'},
-                headers=headers,
-                args={'wait': 3}
+                headers=headers
             )
 
     def parse(self, response):
@@ -82,8 +77,7 @@ class LeroySpider(scrapy.Spider):
         password = os.getenv("password")
         yield scrapy.Request(url=self.start_url, callback=self.parse,
                 meta={'proxy': f'https://{username}:{password}@dc.smartproxy.com:10000'},
-                headers=headers,
-                args={'wait': 3}
+                headers=headers
             )
 
     def parse(self, response):
@@ -135,8 +129,7 @@ class BricoDepotSpider(scrapy.Spider):
         password = os.getenv("password")
         yield scrapy.Request(url=self.start_url, callback=self.parse,
                 meta={'proxy': f'https://{username}:{password}@dc.smartproxy.com:10000'},
-                headers=headers,
-                args={'wait': 3}
+                headers=headers
             )
 
     def parse(self, response):
@@ -190,7 +183,6 @@ class IpTester(scrapy.Spider):
         yield scrapy.Request(url=self.start_url, callback=self.parse,
                 meta={'proxy': f'https://{username}:{password}@dc.smartproxy.com:10000'},
                 headers=headers,
-                args={'wait': 3}
             )
 
     def parse(self, response):
